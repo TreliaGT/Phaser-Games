@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endless Block Runner</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #87CEEB;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<script>
+    // Phaser configuration
+    const config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 400,
+        backgroundColor: '#87CEEB',
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 1000 },
+                debug: false,
+            },
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update,
+        },
+    };
+
+    const game = new Phaser.Game(config);
+
+    let player, ground, obstacles, scoreText;
+    let cursors;
+    let score = 0;
+    let gameOver = false;
+
+    function preload() {
+        // Optionally preload assets here (e.g., images or sounds)
+    }
+
+    function create() {
+        // Create the ground
+        ground = this.add.rectangle(400, 380, 800, 40, 0x2e8b57);
+        this.physics.add.existing(ground, true);
+
+        // Create the player
+        player = this.add.rectangle(100, 300, 40, 40, 0xff0000);
+        this.physics.add.existing(player);
+        player.body.setCollideWorldBounds(true);
+
+        // Add collision between the player and the ground
+        this.physics.add.collider(player, ground);
+
+        // Create a group for obstacles
+        obstacles = this.physics.add.group({
+            allowGravity: false, // Prevent obstacles from falling
+        });
+
+        // Add collision between the player and obstacles
+        this.physics.add.overlap(player, obstacles, () => {
+            gameOver = true;
+            obstacles.getChildren().forEach(obstacle => {
+                obstacle.destroy();
+            });
+            var button = this.add.text(10, 50, 'GameOver , Try Again?', { fontSize: '20px', fill: '#000' });
+            button.setInteractive();
+            button.on("pointerdown", function(){
+                button.destroy();
+                restartGame();
+            });
+        });
+
+
+        // Display the score
+        scoreText = this.add.text(10, 10, 'Score: 0', { fontSize: '20px', fill: '#000' });
+
+        // Input controls
+        cursors = this.input.keyboard.createCursorKeys();
+
+        // Timer to spawn obstacles
+        this.time.addEvent({
+            delay: 1500,
+            callback: spawnObstacle,
+            callbackScope: this,
+            loop: true,
+        });
+    }
+
+    function update() {
+        if (gameOver) return;
+
+        // Player jump logic
+        if (cursors.up.isDown && player.body.touching.down) {
+            player.body.setVelocityY(-500);
+        }
+
+        // Update the score
+        score += 1;
+        scoreText.setText(`Score: ${Math.floor(score / 100)}`);
+
+        // Remove obstacles that move off-screen
+        obstacles.getChildren().forEach(obstacle => {
+            obstacle.body.setVelocityX(-200 - score / 10); 
+            if (obstacle.x < -obstacle.width) {
+                obstacles.killAndHide(obstacle);
+                obstacles.remove(obstacle);
+            }
+        });
+    }
+
+    function spawnObstacle() {
+        const obstacleHeight = Phaser.Math.Between(20, 50);
+        const obstacle = this.add.rectangle(800, 360 - obstacleHeight / 2, 20, obstacleHeight, 0x000000);
+        this.physics.add.existing(obstacle);
+        obstacle.body.setVelocityX(-200 - score / 10); 
+        obstacles.add(obstacle);
+    }
+
+    function restartGame() {
+        // Clear obstacles
+        obstacles.clear(true, true);
+        // Reset score and variables
+        score = 0;
+        gameOver = false;
+    }
+</script>
+</body>
+</html>
