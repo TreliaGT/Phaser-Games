@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Speed Game</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      color: white;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    #game {
+      border: 3px solid white;
+      padding: 20px;
+    }
+    #score {
+      font-size: 24px;
+      margin: 20px;
+    }
+    #word {
+      font-size: 32px;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <script>
+    // Game configuration
+// Game configuration
+const config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+
+const game = new Phaser.Game(config);
+
+let wordText;
+let inputText;
+let currentWord;
+let scoreText;
+let score = 0;
+let timerText;
+let timer = 0;
+let gameTime = 30; // Game duration in seconds
+let glowing = false;
+
+function preload() {
+    // Preload assets if necessary (like sounds, etc.)
+}
+
+function create() {
+    // Display initial text and score
+    wordText = this.add.text(400, 250, "", { font: '32px Arial', fill: '#fff' }).setOrigin(0.5);
+    InputText = this.add.text(400, 350, "", { font: '32px Arial', fill: '#c15f5f' }).setOrigin(0.5);
+    scoreText = this.add.text(400, 50, "Score: 0", { font: '24px Arial', fill: '#fff' }).setOrigin(0.5);
+    timerText = this.add.text(700, 50, "Time: " + gameTime, { font: '24px Arial', fill: '#fff' });
+
+    // Start the first word
+    generateWord();
+
+    // Set up keyboard input
+    this.input.keyboard.on('keydown', handleInput, this);
+
+    // Timer event
+    this.time.addEvent({
+        delay: 1000,
+        callback: updateTimer,
+        callbackScope: this,
+        loop: true
+    });
+}
+
+function update() {
+  if (glowing) {
+        wordText.setStyle({ fill: '#ff0', fontSize: '36px' }); // Yellow glow with bigger size
+    } else {
+        wordText.setStyle({ fill: '#fff', fontSize: '32px' });
+    }
+}
+
+function updateTimer() {
+    timer++;
+    if (timer > gameTime) {
+        // Timer reaches the end, stop the game
+        this.scene.pause();
+        wordText.setText("Game Over!");
+    } else {
+        // Update the timer display
+        timerText.setText("Time: " + (gameTime - timer));
+    }
+}
+
+function generateWord() {
+    // A simple set of words for the player to type
+    const words = ["hello", "world", "Phaser", "coding", "JavaScript", "speed", "game", "challenge"];
+    
+    // Choose a random word from the list
+    currentWord = words[Math.floor(Math.random() * words.length)];
+    wordText.setText(currentWord);
+}
+
+function handleInput(event) {
+    if (event.key === 'Backspace') {
+        // Remove the last character from the typed input
+        let typedText = InputText.text.slice(0, -1);
+        InputText.setText(typedText); // Update the input display
+    }else if (event.key.length === 1) {  // Ignore non-letters
+        let typedText = InputText.text;
+
+        // Add typed character to the word on the screen
+        typedText += event.key;
+        InputText.setText(typedText);
+
+        // Check if the typed word matches the current word
+        if (typedText === currentWord) {
+            // Increase score
+            score += 10;
+            scoreText.setText("Score: " + score);
+            glowing = true;
+            this.time.delayedCall(500, () => { glowing = false; }, [], this); // Glow for 500 ms
+            InputText.setText("");
+            
+            // Generate new word after a correct input
+            generateWord(); 
+        }
+    }
+}
+
+
+  </script>
+</body>
+</html>
