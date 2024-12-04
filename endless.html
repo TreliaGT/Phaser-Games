@@ -12,6 +12,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
             height: 100vh;
             background-color: #87CEEB;
         }
@@ -21,6 +22,8 @@
     </style>
 </head>
 <body>
+    <h1>Use the up arrow/W key</h1>
+    <p>press game over to restart the game</p>
 <script>
     // Phaser configuration
     const config = {
@@ -91,7 +94,7 @@
 
         // Input controls
         cursors = this.input.keyboard.createCursorKeys();
-
+        keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
         // Timer to spawn obstacles
         this.time.addEvent({
             delay: 1500,
@@ -105,7 +108,8 @@
         if (gameOver) return;
 
         // Player jump logic
-        if (cursors.up.isDown && player.body.touching.down) {
+        if ((cursors.up.isDown || keyW.isDown) && player.body.touching.down) {
+
             player.body.setVelocityY(-500);
         }
 
